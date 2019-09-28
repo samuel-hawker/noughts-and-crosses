@@ -1,12 +1,15 @@
-use regex::Regex;
 use std::io;
+mod state;
+
+const BLANK: &str = ".";
+const NOUGHT: &str = "O";
+const CROSS: &str = "X";
 
 fn main() {
     println!("Start Game!");
 
-    let valid_location = Regex::new(r"^[abc][123]").unwrap();
-
-    let game_state = &mut Vec::new();
+    let game_state = &mut state::GameState::new();
+    print!("{}", game_state);
 
     loop {
         println!("Please input x location");
@@ -16,17 +19,26 @@ fn main() {
         io::stdin()
             .read_line(&mut location)
             .expect("Failed to read line");
-
-        if !valid_location.is_match(&location) {
-            println!("Invalid value pick any value between a1 and c3");
-            continue;
+        // Trim newline from console
+        if location.ends_with('\n') {
+            location = location[0..location.len() - 1].to_string();
         }
 
-        if game_state.contains(&location) {
-            println!("This space is already filled");
-            continue;
+        if !state::valid_location(&location) {
+            println!(
+                "Invalid value {} , pick any value between a1 and c3",
+                location
+            );
         }
 
-        game_state.push(location)
+        let value = game_state.set_value(location, -1);
+        match value {
+            Ok(value) => value,
+            Err(value) => {
+                println!("{}", value);
+                continue;
+            }
+        };
+        println!("game state:\n{}", game_state);
     }
 }
